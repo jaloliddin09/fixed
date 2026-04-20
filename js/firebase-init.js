@@ -1,16 +1,51 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getDatabase, ref, onValue, set, get, update, remove, push } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-const firebaseConfig = {
-  apiKey: "AIzaSyBVPFhLtIps-PAJ4qMcj4WStCXF6kcZ7ZU",
-  authDomain: "jaloliddin-kurs.firebaseapp.com",
-  databaseURL: "https://jaloliddin-kurs-default-rtdb.firebaseio.com",
-  projectId: "jaloliddin-kurs",
-  storageBucket: "jaloliddin-kurs.firebasestorage.app",
-  messagingSenderId: "182277939257",
-  appId: "1:182277939257:web:d4f50ff3a6b186aba96de8"
-};
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
-window._fb = { db, ref, onValue, set, get, update, remove, push };
-window._fbReady = true;
-window.dispatchEvent(new Event('fbReady'));
+// Firebase v10 compat — type="module" kerak emas, defer bilan ishlaydi
+(function() {
+  var scripts = [
+    'https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js',
+    'https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js'
+  ];
+
+  var loaded = 0;
+  function onLoad() {
+    loaded++;
+    if (loaded < scripts.length) return;
+    // Ikkalasi ham yuklandi
+    var firebaseConfig = {
+      apiKey: "AIzaSyBVPFhLtIps-PAJ4qMcj4WStCXF6kcZ7ZU",
+      authDomain: "jaloliddin-kurs.firebaseapp.com",
+      databaseURL: "https://jaloliddin-kurs-default-rtdb.firebaseio.com",
+      projectId: "jaloliddin-kurs",
+      storageBucket: "jaloliddin-kurs.firebasestorage.app",
+      messagingSenderId: "182277939257",
+      appId: "1:182277939257:web:d4f50ff3a6b186aba96de8"
+    };
+    firebase.initializeApp(firebaseConfig);
+    var db = firebase.database();
+    // window._fb ni eski API bilan mos qilish
+    window._fb = {
+      db: db,
+      ref: function(dbOrPath, path) {
+        // fbGet/fbSet/fbUpdate/fbRemove (db, path) yoki (path) shaklida chaqiradi
+        if (typeof dbOrPath === 'string') return db.ref(dbOrPath);
+        return db.ref(path);
+      },
+      onValue: function(refObj, cb, errCb) {
+        refObj.on('value', cb, errCb);
+      },
+      set: function(refObj, data) { return refObj.set(data); },
+      get: function(refObj) { return refObj.once('value'); },
+      update: function(refObj, data) { return refObj.update(data); },
+      remove: function(refObj) { return refObj.remove(); },
+      push: function(refObj, data) { return refObj.push(data); }
+    };
+    window._fbReady = true;
+    window.dispatchEvent(new Event('fbReady'));
+  }
+
+  scripts.forEach(function(src) {
+    var s = document.createElement('script');
+    s.src = src;
+    s.onload = onLoad;
+    document.head.appendChild(s);
+  });
+})();
